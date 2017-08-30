@@ -29,6 +29,10 @@ def CpplintError(filename, linenum, category, confidence, message):
 
 cpplint.__dict__['Error'] = CpplintError
 
+# CONFIG ERRORS
+cpplint._line_length = 160
+cpplint._SetFilters("-legal,-build/include")
+cdup = os.popen("git rev-parse --show-cdup").readline().strip()
 
 # Change stderr to write with replacement characters so we don't die
 # if we try to print something containing non-ASCII characters.
@@ -58,33 +62,35 @@ gcf.filter_by_extension(changed_lines, default_extensions.lower().split(','))
 
 # The computed diff outputs absolute paths, so we must cd before accessing
 # those files.
-gcf.cd_to_toplevel()
-old_tree = gcf.create_tree_from_workdir(changed_lines)
-new_tree = gcf.run_clang_format_and_save_to_tree(changed_lines,
-                                                 binary=clangformat_binary,
-                                                 style='Chromium')
+#gcf.cd_to_toplevel()
+#old_tree = gcf.create_tree_from_workdir(changed_lines)
+#new_tree = gcf.run_clang_format_and_save_to_tree(changed_lines,
+#                                                 binary=clangformat_binary,
+#                                                 style='Chromium')
 
-sys.stderr.write('Clang-format:\n')
+#sys.stderr.write('Clang-format:\n')
 clang_format_made_changes = False
-if old_tree != new_tree:
-  changed_files = gcf.apply_changes(old_tree, new_tree)
-  if len(changed_files) > 0:
-    clang_format_made_changes = True
-    gcf.print_diff(old_tree, new_tree)
+#if old_tree != new_tree:
+#  changed_files = gcf.apply_changes(old_tree, new_tree)
+#  if len(changed_files) > 0:
+#    clang_format_made_changes = True
+#    gcf.print_diff(old_tree, new_tree)
 
-sys.stderr.write('\nCpplint:\n')
+sys.stderr.write('Checking coding styles(pre-commit):\n\n')
 cpplint_error_count = 0
 for filename, ranges in changed_lines.iteritems():
   _cpplint_file_errors = []
   save_stderr = sys.stderr
   sys.stderr = open(os.devnull, "w")
-  cpplint.ProcessFile(filename, 0)
+  cpplint.ProcessFile(os.path.join(cdup, filename), 0)
   sys.stderr = save_stderr
   for linenum, message in _cpplint_file_errors:
     # Sometimes cpplint reports linenum=0 instead of the acutal line.
-    if any((r.start <= linenum <= r.start + r.count for r in ranges)) or linenum == 0:
+    if any((r.start <= linenum <= r.start + r.count - 1 for r in ranges)) or linenum == 0:
       cpplint_error_count += 1
-      sys.stderr.write('%s:%s:  %s\n' % (filename, linenum, message))
+      sys.stderr.write('  \033[31m%s:%s\033[0m:  %s\n' % (filename, linenum, message))
+
+sys.stderr.write('\n\033[31mC++ style checking(cpplint) report error(s), nothing commited!\033[0m\n')
 
 if cpplint_error_count > 0:
   sys.exit(2)
