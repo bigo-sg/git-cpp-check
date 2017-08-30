@@ -90,9 +90,8 @@ for filename, ranges in changed_lines.iteritems():
       cpplint_error_count += 1
       sys.stderr.write('  \033[31m%s:%s\033[0m:  %s\n' % (filename, linenum, message))
 
-sys.stderr.write('\n\033[31mC++ style checking(cpplint) report error(s), nothing commited!\033[0m\n')
-
 if cpplint_error_count > 0:
+  sys.stderr.write('\n\033[31mC++ style checking(cpplint) report error(s), nothing commited!\033[0m\n')
   sys.exit(2)
 
 if clang_format_made_changes:
