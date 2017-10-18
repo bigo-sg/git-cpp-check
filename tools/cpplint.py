@@ -1839,7 +1839,8 @@ def CheckForHeaderGuard(filename, clean_lines, error):
 
   # The guard should be PATH_FILE_H_, but we also allow PATH_FILE_H__
   # for backward compatibility.
-  if ifndef != cppvar:
+  # if ifndef != cppvar:
+  if cppvar.find(ifndef) < 0:
     error_level = 0
     if ifndef != cppvar + '_':
       error_level = 5
@@ -1852,7 +1853,7 @@ def CheckForHeaderGuard(filename, clean_lines, error):
   # Check for "//" comments on endif line.
   ParseNolintSuppressions(filename, raw_lines[endif_linenum], endif_linenum,
                           error)
-  match = Match(r'#endif\s*//\s*' + cppvar + r'(_)?\b', endif)
+  match = Match(r'#endif\s*//\s*' + ifndef + r'(_)?\b', endif)
   if match:
     if match.group(1) == '_':
       # Issue low severity warning for deprecated double trailing underscore
@@ -1871,17 +1872,17 @@ def CheckForHeaderGuard(filename, clean_lines, error):
       break
 
   if no_single_line_comments:
-    match = Match(r'#endif\s*/\*\s*' + cppvar + r'(_)?\s*\*/', endif)
+    match = Match(r'#endif\s*/\*\s*' + ifndef + r'(_)?\s*\*/', endif)
     if match:
       if match.group(1) == '_':
         # Low severity warning for double trailing underscore
         error(filename, endif_linenum, 'build/header_guard', 0,
-              '#endif line should be "#endif  /* %s */"' % cppvar)
+              '#endif line should be "#endif  /* %s */"' % ifndef)
       return
 
   # Didn't find anything
   error(filename, endif_linenum, 'build/header_guard', 5,
-        '#endif line should be "#endif  // %s"' % cppvar)
+        '#endif line should be "#endif  // %s"' % ifndef)
 
 
 def CheckHeaderFileIncluded(filename, include_state, error):
