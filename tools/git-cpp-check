@@ -31,7 +31,7 @@ cpplint.__dict__['Error'] = CpplintError
 
 # CONFIG ERRORS
 cpplint._line_length = 160
-cpplint._SetFilters("-legal,-build/include")
+cpplint._SetFilters("-legal,-build/include,-runtime/explicit,-runtime/references")
 cdup = os.popen("git rev-parse --show-cdup").readline().strip()
 
 # Change stderr to write with replacement characters so we don't die
